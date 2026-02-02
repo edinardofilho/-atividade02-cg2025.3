@@ -9,7 +9,7 @@ struct Shaders {
   unsigned int id;
 };
 
-void load_shaders(struct Shaders *shaders, const char *vertex_path, const char *frag_path) {
+void cg_load_shaders(struct Shaders *shaders, const char *vertex_path, const char *frag_path) {
   //Some boilerplate
   const int logSize = 512;
   char infoLog[logSize];
@@ -92,8 +92,13 @@ void load_shaders(struct Shaders *shaders, const char *vertex_path, const char *
   fclose(frag_file);
 }
 
-void use_shaders(struct Shaders* shaders) {
-  glUseProgram(shaders->id);
+void cg_use_shaders(const struct Shaders shaders) {
+  glUseProgram(shaders.id);
+}
+
+void cg_uniform_set_int(const struct Shaders shaders, const char *path, const int value) {
+  cg_use_shaders(shaders);
+  glUniform1i(glGetUniformLocation(shaders.id, path), value);
 }
 
 #endif
