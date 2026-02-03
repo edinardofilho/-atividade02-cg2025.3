@@ -17,7 +17,7 @@ void cgTextureInit() {
   stbi_set_flip_vertically_on_load(1);
 }
 
-void cgTexture2DLoad(struct Texture *texture, const char *texturePath, const int textureHasAlpha) {
+void cgTextureLoad(struct Texture *texture, const char *texturePath, const int textureHasAlpha) {
   unsigned char *data = stbi_load(texturePath, &(texture->width), &(texture->height), &(texture->nr_channels), 0);
   if (!data) {
     printf("Failed to load texture from: %s\n", texturePath);
@@ -43,7 +43,7 @@ void cgTexture2DLoad(struct Texture *texture, const char *texturePath, const int
   stbi_image_free(data);
 }
 
-void cgTexture2DBind(const struct Texture texture, const int textureType, const int textureShaderLocation) {
+void cgTextureBind(const struct Texture texture, const int textureType, const int textureShaderLocation) {
   glActiveTexture(textureShaderLocation);
   glBindTexture(textureType, texture.id);
 }

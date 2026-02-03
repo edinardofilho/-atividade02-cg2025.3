@@ -45,8 +45,8 @@ int main()
   //Load texture
   cgTextureInit();
   struct Texture texture1, texture2;
-  cgTexture2DLoad(&texture1, "wall.jpg", false);
-  cgTexture2DLoad(&texture2, "awesomeface.png", true);
+  cgTextureLoad(&texture1, "wall.jpg", false);
+  cgTextureLoad(&texture2, "awesomeface.png", true);
 
   cgShaderUniformSetInt(shaders, "texture1_data", 0);
   cgShaderUniformSetInt(shaders, "texture2_data", 1);
@@ -105,8 +105,8 @@ int main()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    cgTexture2DBind(texture1, GL_TEXTURE_2D, GL_TEXTURE0);
-    cgTexture2DBind(texture2, GL_TEXTURE_2D, GL_TEXTURE1);
+    cgTextureBind(texture1, GL_TEXTURE_2D, GL_TEXTURE0);
+    cgTextureBind(texture2, GL_TEXTURE_2D, GL_TEXTURE1);
 
     cgShadersUse(shaders);
 
