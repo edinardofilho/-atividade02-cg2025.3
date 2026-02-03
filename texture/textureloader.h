@@ -13,14 +13,14 @@ struct Texture {
   unsigned int id;
 };
 
-void cg_texture_init() {
+void cgTextureInit() {
   stbi_set_flip_vertically_on_load(1);
 }
 
-void cg_load_2d_texture(struct Texture *texture, const char *texture_path, const int texture_has_alpha) {
-  unsigned char *data = stbi_load(texture_path, &(texture->width), &(texture->height), &(texture->nr_channels), 0);
+void cgTexture2DLoad(struct Texture *texture, const char *texturePath, const int textureHasAlpha) {
+  unsigned char *data = stbi_load(texturePath, &(texture->width), &(texture->height), &(texture->nr_channels), 0);
   if (!data) {
-    printf("Failed to load texture from: %s\n", texture_path);
+    printf("Failed to load texture from: %s\n", texturePath);
     stbi_image_free(data);
     return;
   }
@@ -33,7 +33,7 @@ void cg_load_2d_texture(struct Texture *texture, const char *texture_path, const
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   
-  if (texture_has_alpha)
+  if (textureHasAlpha)
     glTexImage2D(GL_TEXTURE_2D, CG_MANUAL_MIPMAP_LEVEL, GL_RGBA, texture->width, texture->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
   else
     glTexImage2D(GL_TEXTURE_2D, CG_MANUAL_MIPMAP_LEVEL, GL_RGB, texture->width, texture->height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -43,9 +43,9 @@ void cg_load_2d_texture(struct Texture *texture, const char *texture_path, const
   stbi_image_free(data);
 }
 
-void cg_bind_texture(const struct Texture texture, const int texture_type, const int texture_location) {
-  glActiveTexture(texture_location);
-  glBindTexture(texture_type, texture.id);
+void cgTexture2DBind(const struct Texture texture, const int textureType, const int textureShaderLocation) {
+  glActiveTexture(textureShaderLocation);
+  glBindTexture(textureType, texture.id);
 }
 
 #endif

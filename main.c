@@ -21,7 +21,7 @@ int main()
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OPEN_GL", NULL, NULL);
   if (window == NULL)
   {
     printf("Failed to create GLFW window\n");
@@ -40,16 +40,16 @@ int main()
   //PROGRAM CODE
   //Load shaders
   struct Shaders shaders;
-  cg_load_shaders(&shaders, "shaders/vertex.glsl", "shaders/fragment.glsl");
+  cgShadersLoad(&shaders, "shaders/vertex.glsl", "shaders/fragment.glsl");
 
   //Load texture
-  cg_texture_init();
+  cgTextureInit();
   struct Texture texture1, texture2;
-  cg_load_2d_texture(&texture1, "wall.jpg", false);
-  cg_load_2d_texture(&texture2, "awesomeface.png", true);
+  cgTexture2DLoad(&texture1, "wall.jpg", false);
+  cgTexture2DLoad(&texture2, "awesomeface.png", true);
 
-  cg_uniform_set_int(shaders, "texture1_data", 0);
-  cg_uniform_set_int(shaders, "texture2_data", 1);
+  cgShaderUniformSetInt(shaders, "texture1_data", 0);
+  cgShaderUniformSetInt(shaders, "texture2_data", 1);
 
   //Data
   float vertices[] = {
@@ -105,10 +105,10 @@ int main()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    cg_bind_texture(texture1, GL_TEXTURE_2D, GL_TEXTURE0);
-    cg_bind_texture(texture2, GL_TEXTURE_2D, GL_TEXTURE1);
+    cgTexture2DBind(texture1, GL_TEXTURE_2D, GL_TEXTURE0);
+    cgTexture2DBind(texture2, GL_TEXTURE_2D, GL_TEXTURE1);
 
-    cg_use_shaders(shaders);
+    cgShadersUse(shaders);
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

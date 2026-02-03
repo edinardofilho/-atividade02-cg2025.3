@@ -9,20 +9,20 @@ struct Shaders {
   unsigned int id;
 };
 
-void cg_load_shaders(struct Shaders *shaders, const char *vertex_path, const char *frag_path) {
+void cgShadersLoad(struct Shaders *shaders, const char *vertexPath, const char *fragPath) {
   //Some boilerplate
   const int logSize = 512;
   char infoLog[logSize];
   int succ;
   
   //Load Shaders from file
-  FILE *vertex_file = fopen(vertex_path, "r");
+  FILE *vertex_file = fopen(vertexPath, "r");
   if (vertex_file == NULL) {
     printf("Unable to load vertex shader.\n");
     return;
   }
 
-  FILE *frag_file = fopen(frag_path, "r");
+  FILE *frag_file = fopen(fragPath, "r");
   if (frag_file == NULL) {
     printf("Unable to read fragment shader into buffer.\n");
     return;
@@ -92,13 +92,13 @@ void cg_load_shaders(struct Shaders *shaders, const char *vertex_path, const cha
   fclose(frag_file);
 }
 
-void cg_use_shaders(const struct Shaders shaders) {
+void cgShadersUse(const struct Shaders shaders) {
   glUseProgram(shaders.id);
 }
 
-void cg_uniform_set_int(const struct Shaders shaders, const char *path, const int value) {
-  cg_use_shaders(shaders);
-  glUniform1i(glGetUniformLocation(shaders.id, path), value);
+void cgShaderUniformSetInt(const struct Shaders shaders, const char *uniformPath, const int value) {
+  cgShadersUse(shaders);
+  glUniform1i(glGetUniformLocation(shaders.id, uniformPath), value);
 }
 
 #endif
