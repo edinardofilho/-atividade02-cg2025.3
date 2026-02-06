@@ -1,7 +1,7 @@
-#ifndef TEXTURELOADER_H
-#define TEXTURELOADER_H
+#ifndef TEXTURES_H
+#define TEXTURES_H
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 #include "stb_image.h"
 
 #define CG_MANUAL_MIPMAP_LEVEL 0
@@ -17,9 +17,9 @@ void cgTextureInit() {
   stbi_set_flip_vertically_on_load(1);
 }
 
-void cgTextureLoad(struct Texture *texture, const char *texturePath, const int textureHasAlpha) {
+void cgTextureLoad(struct Texture * const texture, char const * const texturePath, int const textureHasAlpha) {
   unsigned char *data = stbi_load(texturePath, &(texture->width), &(texture->height), &(texture->nr_channels), 0);
-  if (!data) {
+  if (data == NULL) {
     printf("Failed to load texture from: %s\n", texturePath);
     stbi_image_free(data);
     return;
@@ -43,9 +43,9 @@ void cgTextureLoad(struct Texture *texture, const char *texturePath, const int t
   stbi_image_free(data);
 }
 
-void cgTextureBind(const struct Texture texture, const int textureType, const int textureShaderLocation) {
+void cgTextureBind(struct Texture const * const texture, int const textureType, int const textureShaderLocation) {
   glActiveTexture(textureShaderLocation);
-  glBindTexture(textureType, texture.id);
+  glBindTexture(textureType, texture->id);
 }
 
 #endif
