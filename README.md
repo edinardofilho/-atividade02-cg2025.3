@@ -11,5 +11,5 @@ A ideia é de fazer um simulador do sistema solar, com movimento simulando o rea
 # Instruções de compilação
 ```
 $ sudo pacman -S glfw 
-$ gcc main.c glad-src/glad.c texture/stb_image_impl.c -lglfw -lm -Iinclude -o output.out
+$ gcc src/* -lglfw -lm -Iinclude -o output.out
 ```
