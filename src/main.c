@@ -9,11 +9,13 @@
 #include <transform/vector3.h>
 #include <camera/camera.h>
 #include <objects/object.h>
+#include <objects/shapes.h>
 
 #define true 1
 #define false 0
 
 typedef struct Shaders Shaders;
+typedef struct Texture Texture;
 typedef struct Matrix4 Matrix4;
 typedef struct Vector3 Vector3;
 typedef struct Camera Camera;
@@ -71,102 +73,29 @@ int main()
 
   //PROGRAM CODE
   //Load shaders
-  struct Shaders * shadersPtr = malloc(sizeof(Shaders));
-  int shadersRes = cgShadersLoad(shadersPtr, "include/shaders/vertex.glsl", "include/shaders/fragment.glsl");
+  Shaders shaders = cgShadersLoad("include/shaders/vertex.glsl", "include/shaders/fragment.glsl");
 
   //Load texture
   cgTextureInit();
-  struct Texture texture1, texture2;
-  cgTextureLoad(&texture1, "assets/wall.jpg", false);
-  cgTextureLoad(&texture2, "assets/awesomeface.png", true);
+  Texture texture1 = cgTextureLoad("assets/wall.jpg", false);
+  Texture texture2 = cgTextureLoad("assets/awesomeface.png", true);
+  Texture texture3 = cgTextureLoad("assets/earth2048.bmp", false);
 
-  cgShadersUniformSetInt(shadersPtr, "texture0Data", 0);
-  cgShadersUniformSetInt(shadersPtr, "texture1Data", 1);
+  cgShadersUniformSetInt(&shaders, "texture0Data", 0);
 
-  float cubeVertices[192] = {
-    //Quad1 (Z = 1)
-     1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-    -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-
-    //Quad2 (Z = -1)
-     1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-    -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-
-    //Quad3 (Y = 1)
-     1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-     1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-    -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-
-    //Quad4 (Y = -1)
-     1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-    -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-    
-    //Quad5 (X = 1)
-     1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-     1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-     1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-    
-    //Quad6 (X = -1)
-    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-    -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-    -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-  };
-
-  unsigned int cubeIndices[36] = {
-    0, 1, 2,
-    1, 2, 3,
-    
-    4, 5, 6,
-    5, 6, 7,
-
-    8, 9, 10,
-    9, 10, 11,
-
-    12, 13, 14,
-    13, 14, 15,
-
-    16, 17, 18,
-    17, 18, 19,
-
-    20, 21, 22,
-    21, 22, 23
-  };
-
-  Object * cube = malloc(sizeof(Object));
-  if (cube == NULL)
-    return -20;
-  int res = cgObjectCreate(cube, 192, cubeVertices, 36, cubeIndices);
-  if (res == -1)
-    return -10;
-  cgObjectSendRenderData(cube);
-
-  Vector3 cubePos[10] = {
-    { 0.0f,  0.0f,  0.0f}, 
-    { 2.0f,  5.0f, -15.0f}, 
-    {-1.5f, -2.2f, -2.5f},  
-    {-3.8f, -2.0f, -12.3f},  
-    { 2.4f, -0.4f, -3.5f},  
-    {-1.7f,  3.0f, -7.5f},  
-    { 1.3f, -2.0f, -2.5f},  
-    { 1.5f,  2.0f, -2.5f}, 
-    { 1.5f,  0.2f, -1.5f}, 
-    {-1.3f,  1.0f, -1.5f}
-  };
-
+  //Setup camera and projection matrix
   Vector3 cameraTarget = cgVector3Add(&cameraPosition, &cameraFront);
   Camera camera = cgCameraCreate(&cameraPosition, &cameraTarget, &worldUp);
 
   Matrix4 projection = cgMatrixPerspective(45.0, (double)SCR_WIDTH/(double)SCR_HEIGHT, 0.1, 100.0);
-  cgShadersUniformSetMatrix(shadersPtr, "projection", &projection);
+  cgShadersUniformSetMatrix(&shaders, "projection", &projection);
+
+  Object cube = cgShapeCreateParallelepiped(2.0f, 2.0f, 2.0f);
+  Object sphere = cgShapeCreateSphere(1.0f, 48, 24);
+
+  Vector3 cubeTranslation = {2.0f, 0.0f, 0.0f};
+  Matrix4 matrixTranslation = cgMatrixTranslation(&cubeTranslation);
+  cube.model = cgMatrixMatrixMultiplication(&matrixTranslation, &(cube.model));
 
   //MAIN LOOP
   while (!glfwWindowShouldClose(window))
@@ -183,23 +112,31 @@ int main()
     glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    cgShadersUse(shadersPtr);
-  
-    cgTextureBind(&texture1, GL_TEXTURE_2D, GL_TEXTURE0);
-    cgTextureBind(&texture2, GL_TEXTURE_2D, GL_TEXTURE1);
+    cgShadersUse(&shaders);
 
     Matrix4 view = cgCameraLookAtMatrix(&camera);
-    cgShadersUniformSetMatrix(shadersPtr, "view", &view);
+    cgShadersUniformSetMatrix(&shaders, "view", &view);
 
-    cgShadersUniformSetMatrix(shadersPtr, "model", &(cube->model));
-    cgObjectDraw(cube);
+    cgTextureBind(&texture1, GL_TEXTURE_2D, GL_TEXTURE0);
+    cgShadersUniformSetMatrix(&shaders, "model", &(cube.model));
+    cgObjectSendRenderData(&cube);
+    cgObjectDraw(&cube);
+
+    Vector3 rotationAxis = {0.0f, 1.0f, 0.0f};
+    Matrix4 sphereRotation = cgMatrixRotation(&rotationAxis, 4);
+    sphere.model = cgMatrixMatrixMultiplication(&sphereRotation, &(sphere.model));
+
+    cgTextureBind(&texture3, GL_TEXTURE_2D, GL_TEXTURE0);
+    cgShadersUniformSetMatrix(&shaders, "model", &(sphere.model));
+    cgObjectSendRenderData(&sphere);
+    cgObjectDraw(&sphere);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
   //Free resources
-  cgShadersFree(shadersPtr);
+  cgShadersFree(&shaders);
 
   glfwTerminate();
   return 0;

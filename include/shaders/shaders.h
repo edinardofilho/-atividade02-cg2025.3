@@ -12,7 +12,7 @@ struct Shaders {
   float *matrixArray;
 };
 
-int cgShadersLoad(struct Shaders * const shaders, char const * const vertexPath, char const * const fragPath) {
+struct Shaders cgShadersLoad(char const * const vertexPath, char const * const fragPath) {
   const int logSize = 512;
   char infoLog[logSize];
   int succ;
@@ -21,26 +21,24 @@ int cgShadersLoad(struct Shaders * const shaders, char const * const vertexPath,
   FILE *vertexFile = fopen(vertexPath, "r");
   if (vertexFile == NULL) {
     printf("Unable to load vertex shader.\n");
-    return -2;
   }
 
   FILE *fragmentFile = fopen(fragPath, "r");
   if (fragmentFile == NULL) {
     printf("Unable to read fragment shader into buffer.\n");
-    return -2;
   }
   
   //Read from file to buffer then cast to const
   char *vertexBuffer = NULL;
-  size_t vertexBufferLen;
+  size_t vertexBufferLen = 0;
   ssize_t vertexReadReturn = getdelim(&vertexBuffer, &vertexBufferLen, '\0', vertexFile);
   if (vertexReadReturn < 0 && !feof(vertexFile))
     printf("getdelim error while reading Vertex Shader");
   vertexBuffer[vertexReadReturn - 1] = '\0';
   const char *vertexShaderSource = vertexBuffer;
 
-  char *fragmentBuffer;
-  size_t fragmentBufferLen;
+  char *fragmentBuffer = NULL;
+  size_t fragmentBufferLen = 0;
   ssize_t fragmentReadReturn = getdelim(&fragmentBuffer, &fragmentBufferLen, '\0', fragmentFile);
   if (fragmentReadReturn < 0 && !feof(fragmentFile))
     printf("getdelim error while reading Vertex Shader");
@@ -55,7 +53,6 @@ int cgShadersLoad(struct Shaders * const shaders, char const * const vertexPath,
   if (!succ) {
     glGetShaderInfoLog(vertexId, logSize, NULL, infoLog);
     printf("Failed to compile vertex shader:\n%s\n", infoLog);
-    return -3;
   }
   
   unsigned int fragmentId = glCreateShader(GL_FRAGMENT_SHADER);
@@ -65,7 +62,6 @@ int cgShadersLoad(struct Shaders * const shaders, char const * const vertexPath,
   if (!succ) {
     glGetShaderInfoLog(fragmentId, logSize, NULL, infoLog);
     printf("Failed to compile fragment shader:\n%s\n", infoLog);
-    return -3;
   }
   
   //Link shaders
@@ -77,15 +73,15 @@ int cgShadersLoad(struct Shaders * const shaders, char const * const vertexPath,
   if (!succ) {
     glGetProgramInfoLog(shadersId, logSize, NULL, infoLog);
     printf("Failed to link shader program:\n%s\n", infoLog);
-    return -4;
   }
   
   //Load struct and pass id
-  shaders->id = shadersId;
-  shaders->matrixArray = malloc(16 * sizeof(float));
-  if (shaders->matrixArray == NULL) {
+  struct Shaders shaders = {
+    .id = shadersId,
+    .matrixArray = (float *)malloc(16 * sizeof(float))
+  };
+  if (shaders.matrixArray == NULL) {
     printf("Could not allocate matrixArray memory for shaders\n");
-    return -1;
   }
 
   //Free resources
@@ -96,16 +92,15 @@ int cgShadersLoad(struct Shaders * const shaders, char const * const vertexPath,
   fclose(vertexFile);
   fclose(fragmentFile);
 
-  return 1;
+  return shaders;
 }
 
 void cgShadersUse(struct Shaders const * const shaders) {
   glUseProgram(shaders->id);
 }
 
-void cgShadersFree(struct Shaders * shaders) {
+void cgShadersFree(struct Shaders const * const shaders) {
   free(shaders->matrixArray);
-  free(shaders);
 }
 
 void cgShadersUniformSetInt(struct Shaders const * const shaders, char const * const uniformPath, int const value) {

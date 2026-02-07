@@ -2,6 +2,9 @@
 #define OBJECT_H
 
 #include <glad/glad.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "../transform/matrix.h"
 
@@ -9,38 +12,57 @@ struct Object {
   unsigned int vao;
   unsigned int vbo;
   unsigned int ebo;
-  unsigned int elementCount;
-  unsigned int vertexCount;
+  unsigned int eboSize;
+  unsigned int vboSize;
   unsigned int *elementBuffer;
   float *vertexBuffer;
   struct Matrix4 model;
 };
 
-int cgObjectCreate(struct Object *objectPtr, unsigned int const vertexCount, float * const vertexData, unsigned int const indexCount, unsigned int * const indexData) {
-  objectPtr->vertexCount = vertexCount;
-  objectPtr->vertexBuffer = vertexData;
-  objectPtr->elementCount = indexCount;
-  objectPtr->elementBuffer = indexData;
-  objectPtr->model = cgMatrixIdentity();
+struct Object cgObjectCreate(unsigned int const vertexArraySize, float * const vertexData, unsigned int const indexArraySize, unsigned int * const indexData) {
+  float * reservedVertexData = malloc(vertexArraySize * sizeof(float));
+  if (reservedVertexData == NULL) {
+    printf("Could not reserve vertex data\n");
+    abort();
+  }
+  memcpy(reservedVertexData, vertexData, vertexArraySize * sizeof(float));
 
-  glGenVertexArrays(1, &(objectPtr->vao));
-  glGenBuffers(1, &(objectPtr->vbo));
-  glGenBuffers(1, &(objectPtr->ebo));
+  unsigned int * reservedIndexData = malloc(indexArraySize * sizeof(unsigned int));
+  if (reservedIndexData == NULL) {
+    printf("Could not reserve index data\n");
+    abort();
+  }
+  memcpy(reservedIndexData, indexData, indexArraySize * sizeof(unsigned int));
+
+  struct Object object = {
+    .vao = -1,
+    .vbo = -1,
+    .ebo = -1,
+    .vboSize = vertexArraySize,
+    .vertexBuffer = reservedVertexData,
+    .eboSize = indexArraySize,
+    .elementBuffer = reservedIndexData,
+    .model = cgMatrixIdentity()
+  };
+
+  glGenVertexArrays(1, &(object.vao));
+  glGenBuffers(1, &(object.vbo));
+  glGenBuffers(1, &(object.ebo));
   
-  return 1;
+  return object;
 }
 
 void cgObjectSendRenderData(struct Object const * const object) {
   glBindVertexArray(object->vao);
   
   glBindBuffer(GL_ARRAY_BUFFER, object->vbo);
-  glBufferData(GL_ARRAY_BUFFER, 8 * object->vertexCount * sizeof(float), object->vertexBuffer, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, object->vboSize * sizeof(float), object->vertexBuffer, GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, object->ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, object->elementCount * sizeof(unsigned int), object->elementBuffer, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, object->eboSize * sizeof(unsigned int), object->elementBuffer, GL_STATIC_DRAW);
   
   //Vertice data
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(0                ));
   glEnableVertexAttribArray(0);
   //Normal data
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -50,9 +72,9 @@ void cgObjectSendRenderData(struct Object const * const object) {
   glEnableVertexAttribArray(2);
 }
 
-void cgObjectDraw(const struct Object *object) {
+void cgObjectDraw(struct Object const * const object) {
   glBindVertexArray(object->vao);
-  glDrawElements(GL_TRIANGLES, object->elementCount, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, object->eboSize, GL_UNSIGNED_INT, 0);
 }
 
 #endif
