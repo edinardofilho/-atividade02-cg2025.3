@@ -14,21 +14,14 @@
 #define true 1
 #define false 0
 
-typedef struct Shaders Shaders;
-typedef struct Texture Texture;
-typedef struct Matrix4 Matrix4;
-typedef struct Vector3 Vector3;
-typedef struct Camera Camera;
-typedef struct Object Object;
-
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void mouseCallback(GLFWwindow *window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+unsigned int const SCR_WIDTH = 800;
+unsigned int const SCR_HEIGHT = 600;
 
-const Vector3 worldUp = {0, 1, 0};
+Vector3 const worldUp = {0, 1, 0};
 Vector3 cameraPosition = {0, 0, 5};
 Vector3 cameraFront = {0, 0, -1};
 
@@ -42,44 +35,55 @@ double fov   =  45.0;
 double deltaTime = 0.0;
 double lastFrame = 0.0;
 
-int main()
-{
-  //OPENGL SETUP
+GLFWwindow * setupOpenglContexWindow() {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OPEN_GL", NULL, NULL);
+  GLFWwindow * window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OPEN_GL", NULL, NULL);
   if (window == NULL)
   {
     printf("Failed to create GLFW window\n");
     glfwTerminate();
-    return -1;
+    return NULL;
   }
+
   glfwMakeContextCurrent(window);
+
+  //Resize
   glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+  //Mouse input
   glfwSetCursorPosCallback(window, mouseCallback);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  //Vsync
   glfwSwapInterval(1);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
   {
     printf("Failed to initialize GLAD\n");
-    return -2;
+    return NULL;
   }    
 
   glEnable(GL_DEPTH_TEST);
 
-  //PROGRAM CODE
-  //Load shaders
+  return window;
+};
+
+int main()
+{
+  GLFWwindow * window = setupOpenglContexWindow();
+  if (window == NULL)
+    return -1;
+
   Shaders shaders = cgShadersLoad("include/shaders/vertex.glsl", "include/shaders/fragment.glsl");
 
   //Load texture
   cgTextureInit();
   Texture texture1 = cgTextureLoad("assets/wall.jpg", false);
   Texture texture2 = cgTextureLoad("assets/awesomeface.png", true);
-  Texture texture3 = cgTextureLoad("assets/earth2048.bmp", false);
+  Texture texture3 = cgTextureLoad("assets/2k_earth_daymap.jpg", false);
+  Texture texture4 = cgTextureLoad("assets/2k_saturn.jpg", false);
 
   cgShadersUniformSetInt(&shaders, "texture0Data", 0);
 
@@ -90,16 +94,18 @@ int main()
   Matrix4 projection = cgMatrixPerspective(45.0, (double)SCR_WIDTH/(double)SCR_HEIGHT, 0.1, 100.0);
   cgShadersUniformSetMatrix(&shaders, "projection", &projection);
 
-  Object cube = cgShapeCreateParallelepiped(2.0f, 2.0f, 2.0f);
-  Object sphere = cgShapeCreateSphere(1.0f, 48, 24);
+  Object sphere = cgShapeCreateSphere(1.0f);
 
-  Vector3 cubeTranslation = {2.0f, 0.0f, 0.0f};
-  Matrix4 matrixTranslation = cgMatrixTranslation(&cubeTranslation);
-  cube.model = cgMatrixMatrixMultiplication(&matrixTranslation, &(cube.model));
+  Vector3 sphereColor = {1.0, 1.0, 1.0};
+  cgShadersUniformSetVector3(&shaders, "objectColor", &sphereColor);
+
+  Vector3 lightPos = {5.0, 5.0, 5.0};
+  cgShadersUniformSetVector3(&shaders, "lightPos", &lightPos);
+  Vector3 lightColor = {0.95, 0.95, 0.7};
+  cgShadersUniformSetVector3(&shaders, "lightColor", &lightColor);
 
   //MAIN LOOP
-  while (!glfwWindowShouldClose(window))
-  {
+  while (!glfwWindowShouldClose(window)) {
     double currFrame = glfwGetTime();
     deltaTime = currFrame - lastFrame;
     lastFrame = currFrame;
@@ -108,8 +114,9 @@ int main()
 
     cameraTarget = cgVector3Add(&cameraPosition, &cameraFront);
     cgCameraUpdate(&camera, &cameraPosition, &cameraTarget, &worldUp);
+    cgShadersUniformSetVector3(&shaders, "viewPos", &cameraPosition);
 
-    glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     cgShadersUse(&shaders);
@@ -117,19 +124,13 @@ int main()
     Matrix4 view = cgCameraLookAtMatrix(&camera);
     cgShadersUniformSetMatrix(&shaders, "view", &view);
 
-    cgTextureBind(&texture1, GL_TEXTURE_2D, GL_TEXTURE0);
-    cgShadersUniformSetMatrix(&shaders, "model", &(cube.model));
-    cgObjectSendRenderData(&cube);
-    cgObjectDraw(&cube);
-
     Vector3 rotationAxis = {0.0f, 1.0f, 0.0f};
-    Matrix4 sphereRotation = cgMatrixRotation(&rotationAxis, 4);
+    Matrix4 sphereRotation = cgMatrixRotation(&rotationAxis, deltaTime*10);
     sphere.model = cgMatrixMatrixMultiplication(&sphereRotation, &(sphere.model));
 
-    cgTextureBind(&texture3, GL_TEXTURE_2D, GL_TEXTURE0);
+    cgTextureBind(&texture4, GL_TEXTURE_2D, GL_TEXTURE0);
     cgShadersUniformSetMatrix(&shaders, "model", &(sphere.model));
-    cgObjectSendRenderData(&sphere);
-    cgObjectDraw(&sphere);
+    cgObjectDraw(&shaders, &sphere);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
