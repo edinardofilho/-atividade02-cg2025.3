@@ -3,7 +3,7 @@
 
 #include "object.h"
 
-struct Object cgShapeCreateParallelepiped(float const width, float const height, float const lenght) {
+Object cgShapeCreateParallelepiped(float const width, float const height, float const lenght) {
   float cubeVertices[192] = {
     //Quad1 (Z = 1)
      0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
@@ -62,16 +62,19 @@ struct Object cgShapeCreateParallelepiped(float const width, float const height,
     21, 22, 23
   };
 
-  struct Object cube = cgObjectCreate(192, cubeVertices, 36, cubeIndices);
-  struct Vector3 scaling = {width, height, lenght};
-  struct Matrix4 scalingMatrix = cgMatrixVector3Scale(&scaling);
+  Object cube = cgObjectCreate(192, cubeVertices, 36, cubeIndices);
+  Vector3 const scaling = {width, height, lenght};
+  Matrix4 const scalingMatrix = cgMatrixScaleVector3(&scaling);
   cube.model = cgMatrixMatrixMultiplication(&scalingMatrix, &(cube.model));
   return cube;
 }
 
-struct Object cgShapeCreateSphere(float const radius, int const sectorCount, int const stackCount) {
+Object cgShapeCreateSphere(float const radius) {
+  int const sectorCount = 48;
+  int const stackCount = 24;
+
   int vertexArraySize = 0;
-  float * vertexArray = (float *)malloc(8 * (sectorCount + 1) * (stackCount + 1) * sizeof(float));
+  float * const vertexArray = (float *)malloc(8 * (sectorCount + 1) * (stackCount + 1) * sizeof(float));
   if (vertexArray == NULL)
     printf("Could not allocate memory for sphere vertex data\n");
 
@@ -84,6 +87,7 @@ struct Object cgShapeCreateSphere(float const radius, int const sectorCount, int
     float z = sinf(stackAngle);
 
     for (int j = 0; j <= sectorCount; j++) {
+      //Starts from - to + because of the Y-Z switch (Z cross Y = -X)
       float sectorAngle = - j * sectorStep;
 
       //There is a Y-Z switch because in math Z is up, but, in OpenGL, Y is up
@@ -114,7 +118,7 @@ struct Object cgShapeCreateSphere(float const radius, int const sectorCount, int
   }
 
   int indexArraySize = 0;
-  unsigned int * indexArray = (unsigned int *)malloc(6 * sectorCount * stackCount * sizeof(unsigned int));
+  unsigned int * const indexArray = (unsigned int *)malloc(6 * sectorCount * stackCount * sizeof(unsigned int));
   if (vertexArray == NULL)
     printf("Could not allocate memory for sphere vertex data\n");
 
@@ -141,9 +145,9 @@ struct Object cgShapeCreateSphere(float const radius, int const sectorCount, int
     }
   }
 
-  struct Object sphere = cgObjectCreate(vertexArraySize, vertexArray, indexArraySize, indexArray);
-  struct Vector3 scaling = {radius, radius, radius};
-  struct Matrix4 scalingMatrix = cgMatrixVector3Scale(&scaling);
+  Object sphere = cgObjectCreate(vertexArraySize, vertexArray, indexArraySize, indexArray);
+  Vector3 const scaling = {radius, radius, radius};
+  Matrix4 const scalingMatrix = cgMatrixScaleVector3(&scaling);
   sphere.model = cgMatrixMatrixMultiplication(&scalingMatrix, &(sphere.model));
   return sphere;
 }

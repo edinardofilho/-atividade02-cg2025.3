@@ -4,15 +4,15 @@
 #include "vector3.h"
 #include "matrix.h"
 
-struct Quatern {
+typedef struct {
   double r;
   double i;
   double j;
   double k;
-};
+} Quatern;
 
-struct Quatern cgQuaternConjugate(const struct Quatern q) {
-  struct Quatern quat = {
+Quatern cgQuaternConjugate(const Quatern q) {
+  Quatern quat = {
     .r = q.r,
     .i = -q.i,
     .j = -q.j,
@@ -21,8 +21,8 @@ struct Quatern cgQuaternConjugate(const struct Quatern q) {
   return quat;
 }
 
-struct Quatern cgQuaternProduct(const struct Quatern q1, const struct Quatern q2) {
-  struct Quatern quat = {
+Quatern cgQuaternProduct(const Quatern q1, const Quatern q2) {
+  Quatern quat = {
     .r = q1.r*q2.r - q1.i*q2.i - q1.j*q2.j - q1.k*q2.k,
     .i = q1.r*q2.i + q1.i*q2.r + q1.j*q2.k - q1.k*q2.j,
     .j = q1.r*q2.j - q1.i*q2.k + q1.j*q2.r + q1.k*q2.i,
@@ -31,9 +31,9 @@ struct Quatern cgQuaternProduct(const struct Quatern q1, const struct Quatern q2
   return quat;
 }
 
-struct Quatern cgQuaternUnitQuaternionVector3(const struct Vector3 vector) {
-  const struct Vector3 vectorNormalilzed = cgVector3Normalize(vector);
-  struct Quatern quat = {
+Quatern cgQuaternUnitQuaternionVector3(const Vector3 vector) {
+  const Vector3 vectorNormalilzed = cgVector3Normalize(&vector);
+  Quatern quat = {
     .r = 0.0,
     .i = vectorNormalilzed.x,
     .j = vectorNormalilzed.y,

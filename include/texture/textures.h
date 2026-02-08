@@ -6,26 +6,26 @@
 
 #define CG_MANUAL_MIPMAP_LEVEL 0
 
-struct Texture {
+typedef struct {
   int width;
   int height;
   int nrChannels;
   unsigned int id;
-};
+} Texture;
 
 void cgTextureInit() {
   stbi_set_flip_vertically_on_load(1);
 }
 
-struct Texture cgTextureLoad(char const * const texturePath, int const textureHasAlpha) {
+Texture cgTextureLoad(char const * const texturePath, int const textureHasAlpha) {
   int width, height, nrChannels;
-  unsigned char *data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
+  unsigned char * const data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
   if (data == NULL) {
     printf("Failed to load texture from: %s\n", texturePath);
     stbi_image_free(data);
   }
 
-  struct Texture texture = {
+  Texture texture = {
     .width = width,
     .height = height,
     .nrChannels = nrChannels,
@@ -52,7 +52,7 @@ struct Texture cgTextureLoad(char const * const texturePath, int const textureHa
   return texture;
 }
 
-void cgTextureBind(struct Texture const * const texture, int const textureType, int const textureShaderLocation) {
+void cgTextureBind(Texture const * const texture, int const textureType, int const textureShaderLocation) {
   glActiveTexture(textureShaderLocation);
   glBindTexture(textureType, texture->id);
 }
