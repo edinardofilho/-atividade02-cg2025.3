@@ -163,6 +163,8 @@ int main() {
     cgObjectDraw(&(allCelestial[0].obj));
 
     cgShadersUse(&shadersPlanet);
+    Vector3 earthRotAxis = {0.1, 1.0, 0.1};
+    cgTransformRotate(&(allCelestial[1].obj.transform), &earthRotAxis, 15*deltaTime, true);
     model = cgTransformGetMatrix(&(allCelestial[1].obj.transform));
     cgShadersUniformSetMatrix(&shadersPlanet, "model", &model);
     cgTextureBind(&textureEarth, GL_TEXTURE_2D, GL_TEXTURE0);

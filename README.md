@@ -8,13 +8,21 @@ Descrição do trabalho:
 
 O trabalho consiste em um simulador físico baseado em gravidade.
 
+[Vídeo com execução](https://youtu.be/_A0uAMAXP5s)
+
 # Instruções de compilação
 ```
 $ sudo pacman -S glfw 
 $ gcc src/* -lglfw -lm -Iinclude -o output.out
 ```
 
+# Uso
+```
+$ ./output.out
+```
+
 # Recursos
 - Movimentação com WASD
 - Câmera movimentada por mouse
 - Usando os números 1, 2 e 3, pode se aproximar dos corpos celestes
+
