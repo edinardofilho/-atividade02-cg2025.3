@@ -69,10 +69,10 @@ void cgPhysicsUpdateForces(PhysicsObject * const physicsObjArray, unsigned int c
 
 void cgPhysicsUpdatePosition(PhysicsObject * const physicsObjArray, unsigned int const arraySize, double const timeSlice) {
   for (int i = 0; i < arraySize; i++) {
-    Vector3 const speedSlice = cgVector3ScalarProduct(timeSlice, &(physicsObjArray[i].acceleration));
-    physicsObjArray[i].speed = cgVector3Add(&speedSlice, &(physicsObjArray[i].speed));
-    Vector3 const positionSlice = cgVector3ScalarProduct(timeSlice, &(physicsObjArray[i].speed));
-    cgTransformTranslate(&(physicsObjArray[i].obj.transform), &positionSlice);
+    Vector3 const dV = cgVector3ScalarProduct(timeSlice, &(physicsObjArray[i].acceleration));
+    physicsObjArray[i].speed = cgVector3Add(&dV, &(physicsObjArray[i].speed));
+    Vector3 const dS = cgVector3ScalarProduct(timeSlice, &(physicsObjArray[i].speed));
+    cgTransformTranslate(&(physicsObjArray[i].obj.transform), &dS);
   }
 }
 

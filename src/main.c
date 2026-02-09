@@ -27,7 +27,7 @@ unsigned int const SCR_HEIGHT = 1080;
 
 Vector3 const worldUp = {0, 1, 0};
 Vector3 cameraPosition = {0, 150, 0};
-Vector3 cameraFront = {0, -1, 0};
+Vector3 cameraFront = {0, -1.0, 0};
 
 int firstMouse = true;
 double yaw   = -90.0;

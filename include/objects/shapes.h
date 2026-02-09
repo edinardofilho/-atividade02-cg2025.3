@@ -88,7 +88,7 @@ Object cgShapeCreateSphere(float const radius) {
     float z = sinf(stackAngle);
 
     for (int j = 0; j <= sectorCount; j++) {
-      //Starts from - to + because of the Y-Z switch (Z cross Y = -X)
+      //Starts from - to + because of a Y-Z switch (Z cross Y = -X)
       float sectorAngle = - j * sectorStep;
 
       //There is a Y-Z switch because in math Z is up, but, in OpenGL, Y is up

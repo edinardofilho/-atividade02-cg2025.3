@@ -8,6 +8,13 @@
 #define true 1
 #define false 0
 
+//This file uses a standard process common in GameEngines to decrease cpu matrix multiplication
+//by using quaternions to avoid the complex rotations, allowing each step of the basic:
+// Translation * Rotation * Scaling
+//to use no matrices at all. A matrix conversion is still needed because GPUs only work with
+//matrices, but this step is simple enough to perform. This approach also avoid Gimbal Lock
+//and matrix degeneration.
+
 typedef struct {
   Vector3 postion;
   Quatern rotation;
@@ -69,7 +76,9 @@ void cgTransformScaleVector3(Transform * const transform, Vector3 const * const 
 }
 
 Matrix4 cgTransformGetMatrix(Transform * const transform) {
+  //Only update the matrix if it was modified before called
   if (transform->isDirty == true) {
+    //This process is equivalent to the general axis rotation matrix
     double x = transform->rotation.i, y = transform->rotation.j, z = transform->rotation.k, w = transform->rotation.r;
     double x2 = x + x, y2 = y + y, z2 = z + z;
     double xx = x * x2, xy = x * y2, xz = x * z2;
