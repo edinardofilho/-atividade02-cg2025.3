@@ -4,11 +4,9 @@
 #include "../transform/vector3.h"
 
 typedef struct {
-  Vector3 postion;
-  //colors
-  Vector3 ambient;
-  Vector3 diffuse;
-  Vector3 specular;
+  Vector3 position;
+  Vector3 color;
+  float radius;
 } Light;
 
 #endif

@@ -7,9 +7,13 @@
 #include <texture/textures.h>
 #include <transform/matrix.h>
 #include <transform/vector3.h>
+#include <transform/TRS.h>
 #include <camera/camera.h>
 #include <objects/object.h>
 #include <objects/shapes.h>
+#include <objects/light.h>
+#include <objects/material.h>
+#include <physics/physics.h>
 
 #define true 1
 #define false 0
@@ -18,12 +22,12 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void mouseCallback(GLFWwindow *window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
 
-unsigned int const SCR_WIDTH = 800;
-unsigned int const SCR_HEIGHT = 600;
+unsigned int const SCR_WIDTH = 1920;
+unsigned int const SCR_HEIGHT = 1080;
 
 Vector3 const worldUp = {0, 1, 0};
-Vector3 cameraPosition = {0, 0, 5};
-Vector3 cameraFront = {0, 0, -1};
+Vector3 cameraPosition = {0, 150, 0};
+Vector3 cameraFront = {0, -1, 0};
 
 int firstMouse = true;
 double yaw   = -90.0;
@@ -34,6 +38,8 @@ double fov   =  45.0;
 
 double deltaTime = 0.0;
 double lastFrame = 0.0;
+
+PhysicsObject allCelestial[3];
 
 GLFWwindow * setupOpenglContexWindow() {
   glfwInit();
@@ -70,42 +76,65 @@ GLFWwindow * setupOpenglContexWindow() {
   return window;
 };
 
-int main()
-{
+int main() {
   GLFWwindow * window = setupOpenglContexWindow();
   if (window == NULL)
     return -1;
 
-  Shaders shaders = cgShadersLoad("include/shaders/vertex.glsl", "include/shaders/fragment.glsl");
+  Shaders shadersPlanet = cgShadersLoad("include/shaders/vertex.glsl", "include/shaders/fragment_planet.glsl");
+  Shaders shadersMoon = cgShadersLoad("include/shaders/vertex.glsl", "include/shaders/fragment_moon.glsl");
+  Shaders shadersLight = cgShadersLoad("include/shaders/vertex.glsl", "include/shaders/fragment_sun.glsl");
 
-  //Load texture
   cgTextureInit();
-  Texture texture1 = cgTextureLoad("assets/wall.jpg", false);
-  Texture texture2 = cgTextureLoad("assets/awesomeface.png", true);
-  Texture texture3 = cgTextureLoad("assets/2k_earth_daymap.jpg", false);
-  Texture texture4 = cgTextureLoad("assets/2k_saturn.jpg", false);
+  Texture textureEarth = cgTextureLoad("assets/2k_earth_daymap.jpg", false);
+  Texture textureSun = cgTextureLoad("assets/2k_sun.jpg", false);
+  cgShadersUniformSetInt(&shadersPlanet, "texture0Data", 0);
+  cgShadersUniformSetInt(&shadersLight, "texture0Data", 0);
 
-  cgShadersUniformSetInt(&shaders, "texture0Data", 0);
-
-  //Setup camera and projection matrix
   Vector3 cameraTarget = cgVector3Add(&cameraPosition, &cameraFront);
   Camera camera = cgCameraCreate(&cameraPosition, &cameraTarget, &worldUp);
 
-  Matrix4 projection = cgMatrixPerspective(45.0, (double)SCR_WIDTH/(double)SCR_HEIGHT, 0.1, 100.0);
-  cgShadersUniformSetMatrix(&shaders, "projection", &projection);
+  Matrix4 projection = cgMatrixPerspective(45.0, (double)SCR_WIDTH/(double)SCR_HEIGHT, 0.1, 4000.0);
+  cgShadersUniformSetMatrix(&shadersPlanet, "projection", &projection);
+  cgShadersUniformSetMatrix(&shadersMoon, "projection", &projection);
+  cgShadersUniformSetMatrix(&shadersLight, "projection", &projection);
 
-  Object sphere = cgShapeCreateSphere(1.0f);
+  Vector3 pos0 = {0.0, 0.0, 0.0};
+  Vector3 speed0 = {0.0, 0.0, 0.0};
+  Light lightSource = {
+    .color = {0.95, 1.0, 0.8},
+    .position = pos0,
+    .radius = 25.0
+  };
+  allCelestial[0] = cgPhysicsCreateLight(25.0, 10000000000.0, &pos0, &speed0, &lightSource);
 
-  Vector3 sphereColor = {1.0, 1.0, 1.0};
-  cgShadersUniformSetVector3(&shaders, "objectColor", &sphereColor);
+  Vector3 pos1 = {1000.0, 9.0, 0.0};
+  Vector3 speed1 = {0.0, 0.0, -20.0};
+  Material material1 = {
+    .ambient = {0.1f, 0.1f, 0.1f},
+    .diffuse = {1.0f, 1.0f, 1.0f},
+    .specular = {0.1f, 0.1f, 0.1f},
+    .shininess = 1.0f
+  };
+  allCelestial[1] = cgPhysicsCreateMaterial(1.0, 1000.0, &pos1, &speed1, &material1);
+  cgShadersUniformSetMaterial(&shadersPlanet, "material", &material1);
 
-  Vector3 lightPos = {5.0, 5.0, 5.0};
-  cgShadersUniformSetVector3(&shaders, "lightPos", &lightPos);
-  Vector3 lightColor = {0.95, 0.95, 0.7};
-  cgShadersUniformSetVector3(&shaders, "lightColor", &lightColor);
+  Vector3 pos2 = {1002.0, 5.0, 0.0};
+  Vector3 speed2 = {0.0, 0.0, -20.0};
+  Material material2 = {
+    .ambient = {0.1f, 0.1f, 0.1f},
+    .diffuse = {0.8f, 0.8f, 0.8f},
+    .specular = {0.3f, 0.3f, 0.3f},
+    .shininess = 8
+  };
+  allCelestial[2] = cgPhysicsCreateMaterial(0.5, 1.0, &pos2, &speed2, &material2);
+  cgShadersUniformSetMaterial(&shadersMoon, "material", &material2);
 
   //MAIN LOOP
   while (!glfwWindowShouldClose(window)) {
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     double currFrame = glfwGetTime();
     deltaTime = currFrame - lastFrame;
     lastFrame = currFrame;
@@ -114,30 +143,42 @@ int main()
 
     cameraTarget = cgVector3Add(&cameraPosition, &cameraFront);
     cgCameraUpdate(&camera, &cameraPosition, &cameraTarget, &worldUp);
-    cgShadersUniformSetVector3(&shaders, "viewPos", &cameraPosition);
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    cgShadersUse(&shaders);
-
     Matrix4 view = cgCameraLookAtMatrix(&camera);
-    cgShadersUniformSetMatrix(&shaders, "view", &view);
+    cgShadersUniformSetMatrix(&shadersPlanet, "view", &view);
+    cgShadersUniformSetMatrix(&shadersMoon, "view", &view);
+    cgShadersUniformSetMatrix(&shadersLight, "view", &view);
+    cgShadersUniformSetVector3(&shadersPlanet, "viewPos", &cameraPosition);
+    cgShadersUniformSetVector3(&shadersMoon, "viewPos", &cameraPosition);
 
-    Vector3 rotationAxis = {0.0f, 1.0f, 0.0f};
-    Matrix4 sphereRotation = cgMatrixRotation(&rotationAxis, deltaTime*10);
-    sphere.model = cgMatrixMatrixMultiplication(&sphereRotation, &(sphere.model));
+    cgPhysicsUpdateForces(allCelestial, 3);
+    cgPhysicsUpdatePosition(allCelestial, 3, deltaTime);
+    allCelestial[0].type.light.position = allCelestial[0].obj.transform.postion;
+    cgShadersUniformSetLight(&shadersPlanet, "light", &(allCelestial[0].type.light));
+    cgShadersUniformSetLight(&shadersMoon, "light", &(allCelestial[0].type.light));
 
-    cgTextureBind(&texture4, GL_TEXTURE_2D, GL_TEXTURE0);
-    cgShadersUniformSetMatrix(&shaders, "model", &(sphere.model));
-    cgObjectDraw(&shaders, &sphere);
+    cgShadersUse(&shadersLight);
+    Matrix4 model = cgTransformGetMatrix(&(allCelestial[0].obj.transform));
+    cgShadersUniformSetMatrix(&shadersLight, "model", &model);
+    cgTextureBind(&textureSun, GL_TEXTURE_2D, GL_TEXTURE0);
+    cgObjectDraw(&(allCelestial[0].obj));
+
+    cgShadersUse(&shadersPlanet);
+    model = cgTransformGetMatrix(&(allCelestial[1].obj.transform));
+    cgShadersUniformSetMatrix(&shadersPlanet, "model", &model);
+    cgTextureBind(&textureEarth, GL_TEXTURE_2D, GL_TEXTURE0);
+    cgObjectDraw(&(allCelestial[1].obj));
+
+    cgShadersUse(&shadersMoon);
+    model = cgTransformGetMatrix(&(allCelestial[2].obj.transform));
+    cgShadersUniformSetMatrix(&shadersMoon, "model", &model);
+    cgObjectDraw(&(allCelestial[2].obj));
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
   //Free resources
-  cgShadersFree(&shaders);
+  cgShadersFree(&shadersPlanet);
 
   glfwTerminate();
   return 0;
@@ -148,7 +189,7 @@ void processInput(GLFWwindow *window)
   if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, 1);
 
-  double cameraSpeed = 2.5 * deltaTime;
+  double cameraSpeed = 100.0 * deltaTime;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
     Vector3 movement = cgVector3ScalarProduct(cameraSpeed, &cameraFront);
     cameraPosition = cgVector3Add(&cameraPosition, &movement);
@@ -170,6 +211,30 @@ void processInput(GLFWwindow *window)
     direction = cgVector3Normalize(&direction);
     Vector3 movement = cgVector3ScalarProduct(cameraSpeed, &direction);
     cameraPosition = cgVector3Add(&cameraPosition, &movement);
+  }
+  if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+    Vector3 posNeg = cgVector3Negative(&cameraPosition);
+    Vector3 direction = cgVector3Add(&(allCelestial[0].obj.transform.postion), &posNeg);
+    cameraFront = cgVector3Normalize(&direction);
+    Vector3 frontNeg = cgVector3Negative(&cameraFront);
+    frontNeg = cgVector3ScalarProduct(100.0, &frontNeg);
+    cameraPosition = cgVector3Add(&(allCelestial[0].obj.transform.postion), &frontNeg);
+  }
+  if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+    Vector3 posNeg = cgVector3Negative(&cameraPosition);
+    Vector3 direction = cgVector3Add(&(allCelestial[1].obj.transform.postion), &posNeg);
+    cameraFront = cgVector3Normalize(&direction);
+    Vector3 frontNeg = cgVector3Negative(&cameraFront);
+    frontNeg = cgVector3ScalarProduct(5.0, &frontNeg);
+    cameraPosition = cgVector3Add(&(allCelestial[1].obj.transform.postion), &frontNeg);
+  }
+  if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+    Vector3 posNeg = cgVector3Negative(&cameraPosition);
+    Vector3 direction = cgVector3Add(&(allCelestial[2].obj.transform.postion), &posNeg);
+    cameraFront = cgVector3Normalize(&direction);
+    Vector3 frontNeg = cgVector3Negative(&cameraFront);
+    frontNeg = cgVector3ScalarProduct(2.0, &frontNeg);
+    cameraPosition = cgVector3Add(&(allCelestial[2].obj.transform.postion), &frontNeg);
   }
 }
 

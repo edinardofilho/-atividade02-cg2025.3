@@ -3,6 +3,8 @@
 
 #include "object.h"
 
+#define PI 3.14159265359
+
 Object cgShapeCreateParallelepiped(float const width, float const height, float const lenght) {
   float cubeVertices[192] = {
     //Quad1 (Z = 1)
@@ -64,8 +66,7 @@ Object cgShapeCreateParallelepiped(float const width, float const height, float 
 
   Object cube = cgObjectCreate(192, cubeVertices, 36, cubeIndices);
   Vector3 const scaling = {width, height, lenght};
-  Matrix4 const scalingMatrix = cgMatrixScaleVector3(&scaling);
-  cube.model = cgMatrixMatrixMultiplication(&scalingMatrix, &(cube.model));
+  cgTransformScaleVector3(&(cube.transform), &scaling);
   return cube;
 }
 
@@ -146,9 +147,7 @@ Object cgShapeCreateSphere(float const radius) {
   }
 
   Object sphere = cgObjectCreate(vertexArraySize, vertexArray, indexArraySize, indexArray);
-  Vector3 const scaling = {radius, radius, radius};
-  Matrix4 const scalingMatrix = cgMatrixScaleVector3(&scaling);
-  sphere.model = cgMatrixMatrixMultiplication(&scalingMatrix, &(sphere.model));
+  cgTransformScaleUniform(&(sphere.transform), radius);
   return sphere;
 }
 

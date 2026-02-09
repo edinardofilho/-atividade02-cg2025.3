@@ -6,8 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../transform/matrix.h"
-#include "../shaders/shaders.h"
+#include "../transform/TRS.h"
 
 typedef struct {
   unsigned int vao;
@@ -17,7 +16,7 @@ typedef struct {
   unsigned int vboSize;
   unsigned int *elementBuffer;
   float *vertexBuffer;
-  Matrix4 model;
+  Transform transform;
 } Object;
 
 Object cgObjectCreate(unsigned int const vertexArraySize, float * const vertexData,
@@ -44,7 +43,7 @@ Object cgObjectCreate(unsigned int const vertexArraySize, float * const vertexDa
     .vertexBuffer = reservedVertexData,
     .eboSize = indexArraySize,
     .elementBuffer = reservedIndexData,
-    .model = cgMatrixIdentity()
+    .transform = cgTransformCreate()
   };
 
   glGenVertexArrays(1, &(object.vao));
@@ -76,8 +75,7 @@ Object cgObjectCreate(unsigned int const vertexArraySize, float * const vertexDa
   return object;
 }
 
-void cgObjectDraw(Shaders const * const shaders, Object const * const object) {
-  glUseProgram(shaders->id);
+void cgObjectDraw(Object const * const object) {
   glBindVertexArray(object->vao);
   glDrawElements(GL_TRIANGLES, object->eboSize, GL_UNSIGNED_INT, 0);
 }

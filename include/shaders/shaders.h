@@ -6,6 +6,8 @@
 #include <stdlib.h>
 
 #include "../transform/matrix.h"
+#include "../objects/material.h"
+#include "../objects/light.h"
 
 typedef struct {
   unsigned int id;
@@ -105,45 +107,125 @@ void cgShadersFree(Shaders const * const shaders) {
 }
 
 void cgShadersUniformSetInt(Shaders const * const shaders, char const * const uniformPath, int const value) {
-  cgShadersUse(shaders);
   int const location = glGetUniformLocation(shaders->id, uniformPath);
   if (location == -1) {
     printf("Could not find Uniform: %s\n", uniformPath);
     return;
   }
-  glUniform1i(location, value);
+  glProgramUniform1i(shaders->id, location, value);
 }
 
 void cgShadersUniformSetFloat(Shaders const * const shaders, char const * const uniformPath, float const value) {
-  cgShadersUse(shaders);
   int const location = glGetUniformLocation(shaders->id, uniformPath);
   if (location == -1) {
     printf("Could not find Uniform: %s\n", uniformPath);
     return;
   }
-  glUniform1f(location, value);
+  glProgramUniform1f(shaders->id, location, value);
 }
 
 void cgShadersUniformSetVector3(Shaders const * const shaders, char const * const uniformPath, Vector3 const * const vector) {
-  cgShadersUse(shaders);
   int const location = glGetUniformLocation(shaders->id, uniformPath);
   if (location == -1) {
     printf("Could not find Uniform: %s\n", uniformPath);
     return;
   }
   float const vectorArray[] = {vector->x, vector->y, vector->z};
-  glUniform3fv(location, 1, vectorArray);
+  glProgramUniform3fv(shaders->id, location, 1, vectorArray);
 }
 
 void cgShadersUniformSetMatrix(Shaders * const shaders, char const * const uniformPath, Matrix4 const * const matrix) {
-  cgShadersUse(shaders);
   cgMatrixFlatten(matrix, shaders->matrixArray);
   int const location = glGetUniformLocation(shaders->id, uniformPath);
   if (location == -1) {
     printf("Could not find Uniform: %s\n", uniformPath);
     return;
   }
-  glUniformMatrix4fv(location, 1, GL_TRUE, shaders->matrixArray);
+  glProgramUniformMatrix4fv(shaders->id, location, 1, GL_TRUE, shaders->matrixArray);
+}
+
+void cgShadersUniformSetMaterial(Shaders const * const shaders, char const * const uniformPath, Material const * const material) {
+  int location;
+  char pathBuffer[64];
+  float vectorArray[3] = {0.0};
+  //Ambient
+  sprintf(pathBuffer, "%s.ambient", uniformPath);
+  location = glGetUniformLocation(shaders->id, pathBuffer);
+  if (location == -1) {
+    printf("Could not find Uniform: %s\n", pathBuffer);
+    printf("%s\n", pathBuffer);
+    return;
+  }
+  vectorArray[0] = material->ambient.x; 
+  vectorArray[1] = material->ambient.y; 
+  vectorArray[2] = material->ambient.z; 
+  glProgramUniform3fv(shaders->id, location, 1, vectorArray);
+  //Diffuse
+  sprintf(pathBuffer, "%s.diffuse", uniformPath);
+  location = glGetUniformLocation(shaders->id, pathBuffer);
+  if (location == -1) {
+    printf("Could not find Uniform: %s\n", pathBuffer);
+    return;
+  }
+  vectorArray[0] = material->diffuse.x; 
+  vectorArray[1] = material->diffuse.y; 
+  vectorArray[2] = material->diffuse.z; 
+  glProgramUniform3fv(shaders->id, location, 1, vectorArray);
+  //Specular
+  sprintf(pathBuffer, "%s.specular", uniformPath);
+  location = glGetUniformLocation(shaders->id, pathBuffer);
+  if (location == -1) {
+    printf("Could not find Uniform: %s\n", pathBuffer);
+    return;
+  }
+  vectorArray[0] = material->specular.x; 
+  vectorArray[1] = material->specular.y; 
+  vectorArray[2] = material->specular.z; 
+  glProgramUniform3fv(shaders->id, location, 1, vectorArray);
+  //Shininess
+  sprintf(pathBuffer, "%s.shininess", uniformPath);
+  location = glGetUniformLocation(shaders->id, pathBuffer);
+  if (location == -1) {
+    printf("Could not find Uniform: %s\n", pathBuffer);
+    return;
+  }
+  glProgramUniform1f(shaders->id, location, material->shininess);
+}
+
+void cgShadersUniformSetLight(Shaders const * const shaders, char const * const uniformPath, Light const * const light) {
+  int location;
+  char pathBuffer[64];
+  float vectorArray[3] = {0.0};
+  //Ambient
+  sprintf(pathBuffer, "%s.position", uniformPath);
+  location = glGetUniformLocation(shaders->id, pathBuffer);
+  if (location == -1) {
+    printf("Could not find Uniform: %s\n", pathBuffer);
+    return;
+  }
+  vectorArray[0] = light->position.x; 
+  vectorArray[1] = light->position.y; 
+  vectorArray[2] = light->position.z; 
+  glProgramUniform3fv(shaders->id, location, 1, vectorArray);
+  //Diffuse
+  sprintf(pathBuffer, "%s.color", uniformPath);
+  location = glGetUniformLocation(shaders->id, pathBuffer);
+  if (location == -1) {
+    printf("Could not find Uniform: %s\n", pathBuffer);
+    return;
+  }
+  vectorArray[0] = light->color.x; 
+  vectorArray[1] = light->color.y; 
+  vectorArray[2] = light->color.z; 
+  glProgramUniform3fv(shaders->id, location, 1, vectorArray);
+  //Radius
+  sprintf(pathBuffer, "%s.radius", uniformPath);
+  location = glGetUniformLocation(shaders->id, pathBuffer);
+  if (location == -1) {
+    printf("Could not find Uniform: %s\n", pathBuffer);
+    return;
+  }
+  glProgramUniform1f(shaders->id, location, light->radius);
 }
 
 #endif
