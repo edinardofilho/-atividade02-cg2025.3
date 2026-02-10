@@ -6,7 +6,7 @@ Equipe:
 
 Descrição do trabalho:
 
-O trabalho consiste em um simulador físico baseado em gravidade.
+Um simulador físico baseado em gravidade, com três corpos celestes, simulando o Sol, a Terra e a Lua.
 
 [Vídeo com execução](https://youtu.be/_A0uAMAXP5s)
 
